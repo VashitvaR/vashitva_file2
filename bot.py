@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize OpenAI API client with your API key
-client = openai.Client(api_key=st.secrets('OPENAI_KEY'))
+client = openai.Client(api_key=st.secrets["OPENAI_KEY"])
+
 
 # Define the function to extract text from PDF
 def extract_text(feed):
