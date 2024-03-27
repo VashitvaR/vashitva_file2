@@ -9,7 +9,7 @@ load_dotenv()
 
 
 # Initialize OpenAI API client with your API key
-openai.api_key = st.secrets("OPENAI_API_KEY")
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Define the function to extract text from PDF
 def extract_text(feed):
