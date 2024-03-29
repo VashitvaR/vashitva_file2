@@ -1,15 +1,13 @@
 import streamlit as st
 import pdfplumber
-import openai
-import os
 from dotenv import load_dotenv
+from openai import OpenAI, Document, CharacterTextSplitter, load_summarize_chain
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Initialize OpenAI API client with your API key
 openai.api_key = st.secrets['OPENAI_KEY']
-
 
 # Define the function to extract text from PDF
 def extract_text(feed):
@@ -19,37 +17,21 @@ def extract_text(feed):
             text += page.extract_text()
     return text
 
-# Define the function to split text into chunks
-def split_text(text):
-    max_chunk_size = 2048
-    chunks = []
-    current_chunk = ""
-    for sentence in text.split("."):
-        if len(current_chunk) + len(sentence) < max_chunk_size:
-            current_chunk += sentence + "."
-        else:
-            chunks.append(current_chunk.strip())
-            current_chunk = sentence + "."
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    return chunks
-
 # Define the function to generate a summary using OpenAI's GPT-3 API
 def generate_summary(text):
-    input_chunks = split_text(text)
-    output_chunks = []
-    for chunk in input_chunks:
-        response = client.Completion.create(
-            engine="davinci",
-            prompt=(f"Please summarize the following text:\n{chunk}\n\nSummary:"),
-            temperature=0.5,
-            max_tokens=1024,
-            n=1,
-            stop=None
-        )
-        summary = response.choices[0].text.strip()
-        output_chunks.append(summary)
-    return " ".join(output_chunks)
+    # Instantiate the LLM model
+    llm = OpenAI(temperature=0, openai_api_key=openai.api_key)
+
+    # Split text
+    text_splitter = CharacterTextSplitter()
+    texts = text_splitter.split_text(text)
+
+    # Create multiple documents
+    docs = [Document(page_content=t) for t in texts]
+
+    # Text summarization
+    chain = load_summarize_chain(llm, chain_type='map_reduce')
+    return chain.run(docs)
 
 # Streamlit app code
 st.title("PDF Text Extractor and Summarizer")
