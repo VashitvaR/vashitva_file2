@@ -40,7 +40,7 @@ def summarize_text(chunks):
     chain = load_summarize_chain(llm, chain_type='map_reduce')
     # Loop through each chunk and summarize it
     for chunk in chunks:
-        with get_openai_callback() as cb:
+       
             response = chain.run(chunk)
             st.write(response)
 
