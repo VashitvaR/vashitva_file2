@@ -2,13 +2,10 @@ import streamlit as st
 import pdfplumber
 import openai
 from dotenv import load_dotenv
-import streamlit as st
+from langchain import OpenAI
+from langchain.docstore.document import Document
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.chains.question_answering import load_qa_chain
-from langchain.llms import OpenAI
-from langchain.callbacks import get_openai_callback
+from langchain.chains.summarize import load_summarize_chain
 
 # Load environment variables from .env file
 load_dotenv()
@@ -38,15 +35,13 @@ def extract_text(feed):
 
 
 def summarize_text(chunks):
-    embeddings = OpenAIEmbeddings()
-    knowledge_base = FAISS.from_texts(chunks, embeddings)
-    llm = OpenAI()
-    chain = load_summarize_chain(llm, chain_type="stuff")  
-
+    lm = OpenAI(temperature=0, openai_api_key=openai.api_key )
+  
+    chain = load_summarize_chain(llm, chain_type='map_reduce')
     # Loop through each chunk and summarize it
     for chunk in chunks:
         with get_openai_callback() as cb:
-            response = chain.run(input_documents=[chunk])
+            response = chain.run(chunk)
             st.write(response)
 
   
