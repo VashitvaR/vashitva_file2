@@ -1,13 +1,9 @@
 import streamlit as st
 import pdfplumber
 import openai
-import streamlit as st
-import dotenv
 from dotenv import load_dotenv
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
-
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
 from langchain import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
@@ -21,6 +17,12 @@ load_dotenv()
 openai.api_key = st.secrets['OPENAI_KEY']
 
 # Define the function to extract text from PDF
+def extract_text(feed):
+    text = ""
+    with pdfplumber.open(feed) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text()
+    return text
 
 def process_text(text):
     # Split the text into chunks using Langchain's CharacterTextSplitter
@@ -38,31 +40,20 @@ def process_text(text):
 
     return knowledgeBase
 
-def extract_text(feed):
-    text = ""
-    with pdfplumber.open(feed) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text()
-    return text        
-
 def main():
     st.title("📄PDF Summarizer")
-    
     st.divider()
 
-   
+    uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
 
-uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
+    if uploaded_file:
+        text = extract_text(uploaded_file)
+        # Create the knowledge base object
+        knowledgeBase = process_text(text)
 
+        query = "Summarize the content of the uploaded PDF file in approximately 3-5 sentences. Focus on capturing the main ideas and key points discussed in the document. Use your own words and ensure clarity and coherence in the summary."
 
-text=extract_text(uploaded_file)
-    # Create the knowledge base object
-knowledgeBase = process_text(text)
-
-
-query = "Summarize the content of the uploaded PDF file in approximately 3-5 sentences. Focus on capturing the main ideas and key points discussed in the document. Use your own words and ensure clarity and coherence in the summary."
-
-if query:
+        if query:
             docs = knowledgeBase.similarity_search(query)
             OpenAIModel = "gpt-3.5-turbo-16k"
             llm = ChatOpenAI(model=OpenAIModel, temperature=0.1)
@@ -75,5 +66,5 @@ if query:
             st.subheader('Summary Results:')
             st.write(response)
 
-
-
+if __name__ == "__main__":
+    main()
