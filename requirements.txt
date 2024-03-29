@@ -1,15 +1,12 @@
 
 streamlit
-
-
-
+langchain
 openai
+tiktoken
 
 pdfplumber
 
-langchainain
 
-tiktoken
 
 python-dotenv 
 
