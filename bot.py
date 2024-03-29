@@ -1,11 +1,14 @@
 import streamlit as st
 import pdfplumber
 import openai
-from dotenv import load_dotenv
-from langchain import OpenAI
-from langchain.docstore.document import Document
+import streamlit as st
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains.summarize import load_summarize_chain
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain.callbacks import get_openai_callback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,14 +18,8 @@ openai.api_key = st.secrets['OPENAI_KEY']
 
 # Define the function to extract text from PDF
 
-
-def extract_text(feed):
-    text = ""
-    with pdfplumber.open(feed) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text()
-    
-    # Split text into chunks
+def process_text(text):
+    # Split the text into chunks using Langchain's CharacterTextSplitter
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
@@ -30,43 +27,49 @@ def extract_text(feed):
         length_function=len
     )
     chunks = text_splitter.split_text(text)
+
+    # Convert the chunks of text into embeddings to form a knowledge base
+    embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
+    knowledgeBase = FAISS.from_texts(chunks, embeddings)
+
+    return knowledgeBase
+
+def extract_text(feed):
+    text = ""
+    with pdfplumber.open(feed) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text()
+    return text        
+
+def main():
+    st.title("📄PDF Summarizer")
     
-    return chunks
+    st.divider()
 
-
-
-
-
-def summarize_text(chunks):
-    llm = OpenAI(temperature=0, openai_api_key=openai.api_key)
-    chain = load_summarize_chain(llm, chain_type='map_reduce')
-    
-    documents = [Document(page_content=chunk) for chunk in chunks]
-    
-    # Loop through each document and summarize it
-    for doc in documents:
-        response = chain.run(doc)
-        st.write(response)
-
-
-  
-
-    
-
-st.title("PDF Text Extractor and Summarizer")
+   
 
 uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
-if uploaded_file is not None:
-    chunks = extract_text(uploaded_file)
-   
-    st.subheader("Summarized Text:")
-    summarize_text(chunks)
-    
-
-else:
-    st.write("No PDF file uploaded.")
 
 
+text=extract_text(uploaded_file)
+    # Create the knowledge base object
+knowledgeBase = process_text(text)
 
-           
+
+query = "Summarize the content of the uploaded PDF file in approximately 3-5 sentences. Focus on capturing the main ideas and key points discussed in the document. Use your own words and ensure clarity and coherence in the summary."
+
+if query:
+            docs = knowledgeBase.similarity_search(query)
+            OpenAIModel = "gpt-3.5-turbo-16k"
+            llm = ChatOpenAI(model=OpenAIModel, temperature=0.1)
+            chain = load_qa_chain(llm, chain_type='stuff')
+
+            with get_openai_callback() as cost:
+                response = chain.run(input_documents=docs, question=query)
+                print(cost)
+
+            st.subheader('Summary Results:')
+            st.write(response)
+
+
 
