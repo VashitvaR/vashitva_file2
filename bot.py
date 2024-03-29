@@ -38,8 +38,7 @@ def extract_text(feed):
 
 
 def summarize_text(chunks):
-    embeddings = OpenAIEmbeddings()
-    knowledge_base = FAISS.from_texts(chunks, embeddings)
+    
     llm = OpenAI()
     chain = load_summarize_chain(llm, chain_type="stuff")  
 
