@@ -36,9 +36,10 @@ def process_text(text):
 
     # Convert the chunks of text into embeddings to form a knowledge base
     embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
-    knowledgeBase = FAISS.from_texts(chunks, embeddings)
+    if len(embeddings) != 0:
+        knowledgeBase = FAISS.from_texts(chunks, embeddings)
+        return knowledgeBase
 
-    return knowledgeBase
 
 def main():
     st.title("📄PDF Summarizer")
