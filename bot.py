@@ -2,6 +2,9 @@ import streamlit as st
 import pdfplumber
 import openai
 import streamlit as st
+import dotenv
+from dotenv import load_dotenv
+
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain import FAISS
