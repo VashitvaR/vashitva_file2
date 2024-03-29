@@ -14,36 +14,56 @@ load_dotenv()
 openai.api_key = st.secrets['OPENAI_KEY']
 
 # Define the function to extract text from PDF
+
+     text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+      )
+     
+
+
 def extract_text(feed):
     text = ""
     with pdfplumber.open(feed) as pdf:
         for page in pdf.pages:
             text += page.extract_text()
-    return text
+    text_splitter = CharacterTextSplitter(
+        separator="\n",
+        chunk_size=1000,
+        chunk_overlap=200,
+        length_function=len
+      )
+    chunks = text_splitter.split_text(text)        
+    return chunks
 
 
-def generate_response(txt):
-    # Instantiate the LLM model
-    llm = OpenAI(temperature=0, openai_api_key=openai.api_key)
-    # Split text
-    text_splitter = CharacterTextSplitter()
-    texts = text_splitter.split_text(txt)
-    # Create multiple documents
-    docs = [Document(page_content=t) for t in texts]
-    # Text summarization
-    chain = load_summarize_chain(llm, chain_type='map_reduce')
-    return chain.run(docs)
 
-# Streamlit app code
+
+def summarize_text(chunks):
+    summarizer = load_summarize_chain('t5-base')
+    summary = summarizer.run(chunks)
+    return summary
+
+
 st.title("PDF Text Extractor and Summarizer")
 
 uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
-
 if uploaded_file is not None:
-    extracted_text = extract_text(uploaded_file)
+    chunks = extract_text(uploaded_file)
+    st.subheader("Extracted Text Chunks:")
+    for chunk in chunks:
+        st.write(chunk)
     
     st.subheader("Summarized Text:")
-    summarized_text = generate_response(extracted_text)
-    st.text(summarized_text)
+    summary = summarize_text(chunks)
+    st.write(summary)
+
 else:
-    st.write("No text found in the PDF file.")
+    st.write("No PDF file uploaded.")
+
+
+
+           
+
