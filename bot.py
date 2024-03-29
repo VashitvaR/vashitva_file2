@@ -35,14 +35,16 @@ def extract_text(feed):
 
 
 def summarize_text(chunks):
-    llm = OpenAI(temperature=0, openai_api_key=openai.api_key )
-  
+    llm = OpenAI(temperature=0, openai_api_key=openai.api_key)
     chain = load_summarize_chain(llm, chain_type='map_reduce')
-    # Loop through each chunk and summarize it
-    for chunk in chunks:
-       
-            response = chain.run(chunk)
-            st.write(response)
+    
+    documents = [Document(page_content=chunk) for chunk in chunks]
+    
+    # Loop through each document and summarize it
+    for doc in documents:
+        response = chain.run(doc)
+        st.write(response)
+
 
   
 
