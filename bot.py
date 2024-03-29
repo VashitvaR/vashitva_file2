@@ -2,7 +2,10 @@ import streamlit as st
 import pdfplumber
 import openai
 from dotenv import load_dotenv
-from openai import OpenAI, Document, CharacterTextSplitter, load_summarize_chain
+from langchain import OpenAI
+from langchain.docstore.document import Document
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.chains.summarize import load_summarize_chain
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,18 +21,15 @@ def extract_text(feed):
             text += page.extract_text()
     return text
 
-# Define the function to generate a summary using OpenAI's GPT-3 API
-def generate_summary(text):
+
+def generate_response(txt):
     # Instantiate the LLM model
     llm = OpenAI(temperature=0, openai_api_key=openai.api_key)
-
     # Split text
     text_splitter = CharacterTextSplitter()
-    texts = text_splitter.split_text(text)
-
+    texts = text_splitter.split_text(txt)
     # Create multiple documents
     docs = [Document(page_content=t) for t in texts]
-
     # Text summarization
     chain = load_summarize_chain(llm, chain_type='map_reduce')
     return chain.run(docs)
