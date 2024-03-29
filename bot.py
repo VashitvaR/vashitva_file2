@@ -1,28 +1,22 @@
-import streamlit as st
-import pdfplumber
-import openai
+import os
 from dotenv import load_dotenv
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from PyPDF2 import PdfReader
+import streamlit as st
 from langchain.text_splitter import CharacterTextSplitter
+from langchain.embeddings import HuggingFaceEmbeddings
 from langchain import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks import get_openai_callback
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Initialize OpenAI API client with your API key
-openai.api_key = st.secrets['OPENAI_KEY']
-
-# Define the function to extract text from PDF
-def extract_text(feed):
-    text = ""
-    with pdfplumber.open(feed) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text()
-    return text
+def load_openai_api_key():
+    dotenv_path = "openai.env"
+    load_dotenv(dotenv_path)
+    openai_api_key = os.getenv("OPENAI_KEY")
+    if not openai_api_key:
+        raise ValueError(f"Unable to retrieve OPENAI_API_KEY from {dotenv_path}")
+    return openai_api_key
 
 def process_text(text):
     # Split the text into chunks using Langchain's CharacterTextSplitter
@@ -36,19 +30,30 @@ def process_text(text):
 
     # Convert the chunks of text into embeddings to form a knowledge base
     embeddings = HuggingFaceEmbeddings(model_name='sentence-transformers/all-MiniLM-L6-v2')
-    if len(embeddings) != 0:
-        knowledgeBase = FAISS.from_texts(chunks, embeddings)
-        return knowledgeBase
+    knowledgeBase = FAISS.from_texts(chunks, embeddings)
 
+    return knowledgeBase
 
 def main():
     st.title("📄PDF Summarizer")
+    st.write("Created by Hilman Singgih Wicaksana")
     st.divider()
 
-    uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
+    try:
+        os.environ["OPENAI_API_KEY"] = load_openai_api_key()
+    except ValueError as e:
+        st.error(str(e))
+        return
 
-    if uploaded_file:
-        text = extract_text(uploaded_file)
+    pdf = st.file_uploader('Upload your PDF Document', type='pdf')
+
+    if pdf is not None:
+        pdf_reader = PdfReader(pdf)
+        # Text variable will store the pdf text
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+
         # Create the knowledge base object
         knowledgeBase = process_text(text)
 
@@ -67,5 +72,5 @@ def main():
             st.subheader('Summary Results:')
             st.write(response)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
