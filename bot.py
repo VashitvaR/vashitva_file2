@@ -15,13 +15,6 @@ openai.api_key = st.secrets['OPENAI_KEY']
 
 # Define the function to extract text from PDF
 
-     text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
-      )
-     
 
 
 def extract_text(feed):
