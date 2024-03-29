@@ -3,8 +3,6 @@ import pdfplumber
 import openai
 from dotenv import load_dotenv
 import streamlit as st
-
-from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
