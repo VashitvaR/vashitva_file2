@@ -6,7 +6,7 @@ tiktoken
 huggingface-hub==0.17.3
 pdfplumber
 
-
+sentence-transformers==2.2.2
 
 python-dotenv 
 
