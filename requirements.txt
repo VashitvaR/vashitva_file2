@@ -2,7 +2,7 @@
 streamlit
 langchain
 openai
-
+faiss-cpu==1.7.4
 huggingface-hub==0.17.3
 pdfplumber
 
