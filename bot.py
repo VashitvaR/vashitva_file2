@@ -16,20 +16,23 @@ openai.api_key = st.secrets['OPENAI_KEY']
 # Define the function to extract text from PDF
 
 
-
 def extract_text(feed):
     text = ""
     with pdfplumber.open(feed) as pdf:
         for page in pdf.pages:
             text += page.extract_text()
+    
+    # Split text into chunks
     text_splitter = CharacterTextSplitter(
         separator="\n",
         chunk_size=1000,
         chunk_overlap=200,
         length_function=len
-      )
-    chunks = text_splitter.split_text(text)        
+    )
+    chunks = text_splitter.split_text(text)
+    
     return chunks
+
 
 
 
