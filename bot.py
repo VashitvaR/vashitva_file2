@@ -47,9 +47,9 @@ def summarize_text(chunks):
 
     # Loop through each chunk and summarize it
     for chunk in chunks:
-    with get_openai_callback() as cb:
-        response = chain.run(input_documents=[chunk])
-        st.write(response)
+        with get_openai_callback() as cb:
+            response = chain.run(input_documents=[chunk])
+            st.write(response)
 
   
 
