@@ -2,7 +2,7 @@
 streamlit
 langchain
 openai
-tiktoken
+
 huggingface-hub==0.17.3
 pdfplumber
 
