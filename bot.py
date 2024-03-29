@@ -2,10 +2,15 @@ import streamlit as st
 import pdfplumber
 import openai
 from dotenv import load_dotenv
-from langchain import OpenAI
-from langchain.docstore.document import Document
+import streamlit as st
+from PyPDF2 import PdfReader
+from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.chains.summarize import load_summarize_chain
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain.llms import OpenAI
+from langchain.callbacks import get_openai_callback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,23 +40,30 @@ def extract_text(feed):
 
 
 def summarize_text(chunks):
-    summarizer = load_summarize_chain('t5-base')
-    summary = summarizer.run(chunks)
-    return summary
+    embeddings = OpenAIEmbeddings()
+    knowledge_base = FAISS.from_texts(chunks, embeddings)
+    llm = OpenAI()
+    chain = load_summarize_chain(llm, chain_type="stuff")  
 
+    # Loop through each chunk and summarize it
+    for chunk in chunks:
+    with get_openai_callback() as cb:
+        response = chain.run(input_documents=[chunk])
+        st.write(response)
+
+  
+
+    
 
 st.title("PDF Text Extractor and Summarizer")
 
 uploaded_file = st.file_uploader('Choose your .pdf file', type="pdf")
 if uploaded_file is not None:
     chunks = extract_text(uploaded_file)
-    st.subheader("Extracted Text Chunks:")
-    for chunk in chunks:
-        st.write(chunk)
-    
+   
     st.subheader("Summarized Text:")
-    summary = summarize_text(chunks)
-    st.write(summary)
+    summarize_text(chunks)
+    
 
 else:
     st.write("No PDF file uploaded.")
