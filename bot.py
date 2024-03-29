@@ -43,7 +43,7 @@ if uploaded_file is not None:
     extracted_text = extract_text(uploaded_file)
     
     st.subheader("Summarized Text:")
-    summarized_text = generate_summary(extracted_text)
+    summarized_text = generate_response(extracted_text)
     st.text(summarized_text)
 else:
     st.write("No text found in the PDF file.")
