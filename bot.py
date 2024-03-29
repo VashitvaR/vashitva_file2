@@ -35,7 +35,7 @@ def extract_text(feed):
 
 
 def summarize_text(chunks):
-    lm = OpenAI(temperature=0, openai_api_key=openai.api_key )
+    llm = OpenAI(temperature=0, openai_api_key=openai.api_key )
   
     chain = load_summarize_chain(llm, chain_type='map_reduce')
     # Loop through each chunk and summarize it
