@@ -1,5 +1,6 @@
 import streamlit as st
 import pdfplumber
+import openai
 from dotenv import load_dotenv
 from openai import OpenAI, Document, CharacterTextSplitter, load_summarize_chain
 
